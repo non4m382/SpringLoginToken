@@ -10,7 +10,6 @@ class SpringLoginTokenApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println("Hello");
         assertThat("a");
     }
 

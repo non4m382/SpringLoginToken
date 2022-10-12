@@ -58,15 +58,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     public Optional<Authentication> createAuthentication(String token) {
-
+        
         Jws<Claims> jwsClaims = validateToken(token);
-        if (jwsClaims == null) {
-            return null;
-        }
+
 
         Claims claims = jwsClaims.getBody();
         String rolesString = claims.get("scopes").toString();
+
         String[] authStrings = rolesString.replaceAll("[\\[\\]]", "").trim().split(",");
+
 
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(authStrings)
