@@ -1,12 +1,16 @@
 package com.example.springlogintoken.security.jwt;
 
+import com.example.springlogintoken.repository.UserRepository;
 import com.example.springlogintoken.security.service.UserDetailsImpl;
+import com.example.springlogintoken.security.service.UserDetailsServiceImpl;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -24,13 +28,15 @@ public class JwtUtils {
 
     @Value("${bezkoder.app.jwtExpirationMs}")
     private int jwtExpirationMs;
+    @Autowired
+    private UserRepository userRepository;
 
-    public String generateJwtToken(Authentication authentication) {
+    public String generateJwtTokenWithAuthentication(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
-        Collection<? extends GrantedAuthority> objectList = authentication.getAuthorities();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        List<String> roles = objectList.stream()
+        List<String> roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
@@ -42,6 +48,24 @@ public class JwtUtils {
                 .claim("scopes", roles)
                 .compact();
 
+    }
+
+    //
+    public String generateTokenFromUsername(String username) {
+        UserDetailsServiceImpl userDetailsService = new UserDetailsServiceImpl(userRepository);
+        UserDetails user = userDetailsService.loadUserByUsername(username);
+        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+        List<String> roles = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .claim("scopes", roles)
+                .compact();
     }
 
     public String getUserNameFromJwtToken(String token) {
