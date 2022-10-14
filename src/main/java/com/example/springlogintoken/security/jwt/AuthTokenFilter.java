@@ -42,9 +42,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
         Optional<Authentication> authentication = this.createAuthentication(token);
 
-        if (authentication.isPresent()) {
-            SecurityContextHolder.getContext().setAuthentication(authentication.get());
-        }
+        authentication.ifPresent(authentication2 -> SecurityContextHolder.getContext().setAuthentication(authentication2));
 
         filterChain.doFilter(request, response);
 
@@ -60,17 +58,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     public Optional<Authentication> createAuthentication(String token) {
-
+        
         Jws<Claims> jwsClaims = validateToken(token);
-        if (jwsClaims == null) {
-            System.out.println("null jwsClaims");
-            return Optional.empty();
-        }
+
 
         Claims claims = jwsClaims.getBody();
         String rolesString = claims.get("scopes").toString();
 
-        String[] authStrings = rolesString.replaceAll("[\\[\\]\\s]+", "").trim().split(",");
+        String[] authStrings = rolesString.replaceAll("[\\[\\]]", "").trim().split(",");
+
 
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(authStrings)

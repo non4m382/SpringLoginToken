@@ -2,7 +2,6 @@ package com.example.springlogintoken.security;
 
 import com.example.springlogintoken.security.jwt.AuthEntryPointJwt;
 import com.example.springlogintoken.security.jwt.AuthTokenFilter;
-import com.example.springlogintoken.security.jwt.CustomAccessDeniedHandler;
 import com.example.springlogintoken.security.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -32,8 +31,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final AuthEntryPointJwt unauthorizedHandler;
 
-    private final CustomAccessDeniedHandler accessDeniedHandler;
-
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
@@ -60,11 +57,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/api/test/admin").hasRole("ADMIN")
                 .antMatchers("/api/test/**").permitAll()
-                .anyRequest().authenticated()
-                .and()
+                .anyRequest().authenticated().
+                and()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler)
-                .and().exceptionHandling().accessDeniedHandler(accessDeniedHandler)
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
